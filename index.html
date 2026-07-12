@@ -76,6 +76,39 @@
   .result.error { display: block; background: #F7ECE8; border: 1px solid var(--ember); }
 
   .gps { margin-top: 14px; font-size: 0.8rem; color: #8b7d66; text-align: center; }
+
+  /* success flash */
+.flash {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(250,245,234,0.96);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+  text-align: center; padding: 24px;
+}
+.flash.show { opacity: 1; pointer-events: auto; }
+.flash .ring {
+  width: 92px; height: 92px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 18px;
+}
+.flash.in .ring  { background: var(--leaf); }
+.flash.out .ring { background: var(--ember); }
+.flash svg { width: 48px; height: 48px; }
+.flash svg path {
+  stroke: #fff; stroke-width: 3.5; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 60; stroke-dashoffset: 60;
+}
+.flash.show svg path { animation: draw 0.45s ease-out 0.15s forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.flash h2 { font-size: 1.35rem; letter-spacing: 0.04em; margin-bottom: 6px; }
+.flash p  { color: var(--gold-deep); font-size: 1rem; }
+@media (prefers-reduced-motion: reduce) {
+  .flash { transition: none; }
+  .flash svg path { stroke-dashoffset: 0; animation: none; }
+}
+  
 </style>
 </head>
 <body>
@@ -98,6 +131,12 @@
     <div class="result" id="result"></div>
     <div class="gps" id="gps">Location: waiting…</div>
   </div>
+
+  <div class="flash" id="flash" role="status">
+  <div class="ring"><svg viewBox="0 0 52 52"><path d="M14 27 L22 35 L38 18"/></svg></div>
+  <h2 id="flashTitle"></h2>
+  <p id="flashSub"></p>
+</div>
 
 <script>
   // ── CONFIG: paste your Apps Script web app URL here ──
@@ -198,11 +237,8 @@
       if (!r.ok) {
         showResult('error', r.error);
       } else {
-        let msg = (r.action === 'IN')
-          ? '✓ ' + r.name + ' logged IN at ' + r.time + '.'
-          : '✓ ' + r.name + ' logged OUT at ' + r.time + '. Shift: ' + r.shiftHours + ' hrs.';
-        if (r.atOutlet === 'NO') msg += ' (Note: recorded away from the outlet.)';
-        showResult('ok', msg);
+        showSuccess(r);
+if (r.atOutlet === 'NO') showResult('ok', 'Note: recorded away from the outlet.');
         pinInput.value = '';
         try { localStorage.setItem('lc_last_emp', empId); } catch (e) {}
       }
@@ -211,6 +247,17 @@
     }
     checkStatus(); // refresh state either way
   });
+
+  function showSuccess(r) {
+  const flash = $('flash');
+  $('flashTitle').textContent =
+    (r.action === 'IN' ? 'Logged in' : 'Logged out') + ' · ' + r.time;
+  $('flashSub').textContent = r.action === 'IN'
+    ? 'Have a good shift, ' + r.name + '.'
+    : 'Shift: ' + r.shiftHours + ' hrs. See you, ' + r.name + '.';
+  flash.className = 'flash show ' + (r.action === 'IN' ? 'in' : 'out');
+  setTimeout(() => { flash.className = 'flash'; }, 2400);
+}
 
   function showResult(kind, msg) {
     resultBox.className = 'result ' + kind;
