@@ -192,7 +192,6 @@
   // ── Status check: shows what the next punch will do ──
   async function checkStatus() {
     const empId = empInput.value.trim().toUpperCase();
-    resultBox.className = 'result';
     statusReady = false;
     if (!empId) { btn.disabled = true; statusBox.className = 'status'; statusBox.textContent = 'Enter your employee ID to begin.'; return; }
 
@@ -217,6 +216,8 @@
       statusBox.textContent = 'Could not reach the server. Check your connection and try again.';
     }
   }
+
+  empInput.addEventListener('input', () => { resultBox.className = 'result'; });
 
   empInput.addEventListener('change', checkStatus);
   empInput.addEventListener('blur', checkStatus);
