@@ -229,8 +229,18 @@
     if (!statusReady) return;
     if (!pinInput.value) { showResult('error', 'Enter your PIN first.'); return; }
     if (geo.lat == null) {
-      navigator.geolocation.getCurrentPosition(() => {}, () => {});
-      showResult('error', 'Location is required to punch in. Allow location access for this site and try again.');
+      showResult('error', 'Getting your location — trying again…');
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          geo = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+          gpsBox.textContent = 'Location: captured (±' + Math.round(geo.accuracy) + ' m)';
+          showResult('ok', 'Location found — tap the button again to punch.');
+        },
+        err => {
+          showResult('error', 'Location is required to punch in. Allow location access for this site (Settings → Privacy → Location Services → Safari Websites) and try again.');
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+      );
       return;
     }
     btn.disabled = true; btn.textContent = 'Recording…';
