@@ -228,6 +228,11 @@
     const empId = empInput.value.trim().toUpperCase();
     if (!statusReady) return;
     if (!pinInput.value) { showResult('error', 'Enter your PIN first.'); return; }
+    if (geo.lat == null) {
+      navigator.geolocation.getCurrentPosition(() => {}, () => {});
+      showResult('error', 'Location is required to punch in. Allow location access for this site and try again.');
+      return;
+    }
     btn.disabled = true; btn.textContent = 'Recording…';
 
     try {
